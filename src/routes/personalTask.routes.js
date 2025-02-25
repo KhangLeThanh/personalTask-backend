@@ -9,31 +9,42 @@ router.post("/:userId/task", async (req, res) => {
   const { title, content, status } = req.body;
   const userId = req.params.userId;
 
-  let user = await User.findById(userId);
-
-  if (!user) {
-    return res.status(404).json({ error: "User  not found" });
-  }
-  if (!title || !content) {
-    return res
-      .status(400)
-      .json({ error: "All required fields must be filled" });
-  }
-
-  // Create a new task
-  const personalTask = new PersonalTask({
-    user: userId,
-    title,
-    content,
-    status,
-  });
-
   try {
+    // Find the user by ID
+    let user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Validate required fields
+    if (!title || !content) {
+      return res
+        .status(400)
+        .json({ error: "All required fields must be filled" });
+    }
+
+    // Create a new PersonalTask document
+    const personalTask = new PersonalTask({
+      user: userId,
+      title,
+      content,
+      status,
+    });
+
     const savedTask = await personalTask.save();
 
-    // Add the new task to the user's personalTasks array
+    // Ensure user has a personalTasks array (if it doesn't exist)
+    if (!user.personalTasks) {
+      user.personalTasks = [];
+    }
+
+    // Add the new task's ID to the user's personalTasks array
     user.personalTasks.push(savedTask._id);
+
+    // Save the user document with the new task added
     await user.save();
+
+    // Respond with the created task data
     res.status(201).json({
       id: savedTask._id,
       title: savedTask.title,
@@ -41,60 +52,70 @@ router.post("/:userId/task", async (req, res) => {
       status: savedTask.status,
     });
   } catch (error) {
-    res.status(500).json({ error: "Error saving personal task" });
+    // Log the error for debugging
+    console.error("Error saving personal task:", error);
+    res
+      .status(500)
+      .json({ error: error.message || "Error saving personal task" });
   }
 });
 
 // GET /api/tasks/:userId/task - Get Task details
 router.get("/:userId/task/", async (req, res) => {
   const userId = req.params.userId;
+  const { status } = req.query; // Get status from query parameter
 
   try {
-    const user = await User.findById(userId).populate("personalTasks");
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    if (!user.personalTasks) {
-      return res.status(404).json({ error: "Tasks not found for this user" });
+    // Create query object to filter tasks
+    let query = { user: userId };
+    if (status) {
+      query.status = status; // Add status filter if provided
     }
+
+    // Fetch tasks based on query
+    const tasks = await PersonalTask.find(query);
     // Return the user details along with the personal task
     res.status(200).json({
       userName: user.userName,
-      personalTasks: user.personalTasks, // This will contain the profile details (age, bio, location)
+      personalTasks: tasks, // This will contain the task details (title, content, status)
     });
   } catch (error) {
     res.status(500).json({ error: "Error fetching task" });
   }
 });
 
-// PATCH /api/tasks/:userId/task - Update Task details
-router.get("/:userId/task/", async (req, res) => {
+router.patch("/:userId/task/:taskId", async (req, res) => {
   const { title, content, status } = req.body;
-  const userId = req.params.userId;
-  let user = await User.findById(userId);
-  // Create PersonalTask
-  const personalTask = new PersonalTask({
-    user: userId,
-    title,
-    content,
-    status,
-  });
+  const { userId, taskId } = req.params;
+
   try {
-    const savedPersonalTask = await personalTask.save();
+    // Find the user by userId
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
-    // Link profile to User
-    user.personalTasks = savedPersonalTask._id;
-    await user.save();
+    // Find and update the PersonalTask document
+    const updatedPersonalTask = await PersonalTask.findOneAndUpdate(
+      { _id: taskId, user: userId }, // The condition to find the task for this user
+      { title, content, status }, // The fields to update
+      { new: true } // Return the updated document
+    );
 
-    res.status(201).json({
-      id: savedPersonalTask._id,
-      title: savedPersonalTask.title,
-      content: savedPersonalTask.content,
-      status: savedPersonalTask.status,
-    });
+    if (!updatedPersonalTask) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+
+    // Send back the updated task (important: return the updated data)
+    return res.status(200).json(updatedPersonalTask);
   } catch (error) {
-    res.status(500).json({ error: "Error saving user profile" });
+    console.error(error);
+    return res.status(500).json({ error: "Error updating user task" });
   }
 });
 
