@@ -10,7 +10,7 @@ const PersonalTaskSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  description: {
+  content: {
     type: String,
   },
   status: {
