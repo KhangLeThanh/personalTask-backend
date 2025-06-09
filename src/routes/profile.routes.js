@@ -57,7 +57,7 @@ router.patch("/:userId/profile", auth, async (req, res) => {
     res.status(500).json({ error: "Error saving user profile" });
   }
 });
-// GET /api/profiles/:userId/profile - Fetch user by ID
+// GET /api/profiles/:userId/profile - Fetch profile by ID
 router.get("/:userId/profile", async (req, res) => {
   const userId = req.params.userId;
 

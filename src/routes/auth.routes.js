@@ -22,10 +22,17 @@ router.post("/", async (req, res) => {
   const token = jwt.sign(
     { id: user._id, userName: user.userName },
     process.env.JWT_SECRET,
-    { expiresIn: "10h" }
+    { expiresIn: "1d" }
   );
 
-  res.json({ token, user: { id: user._id, userName: user.userName } });
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: false, // ✅ change to true in production (with HTTPS)
+    sameSite: "lax", // or 'strict'
+    maxAge: 10 * 60 * 60 * 1000, // 10 hours in milliseconds
+  });
+
+  res.status(200).json({ user: { id: user._id, userName: user.userName } });
 });
 
 module.exports = router;
