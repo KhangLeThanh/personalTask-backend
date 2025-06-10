@@ -6,6 +6,11 @@ const PersonalTaskSchema = new mongoose.Schema({
     ref: "User", // Reference to User model
     required: true,
   },
+  assignedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User", // assigned user
+    required: false, // optional if not always assigned
+  },
   title: {
     type: String,
     required: true,
