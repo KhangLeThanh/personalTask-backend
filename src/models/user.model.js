@@ -13,14 +13,12 @@ const userSchema = new mongoose.Schema({
   },
   profile: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "UserProfile", // Reference to UserProfile model
+    ref: "UserProfile",
   },
-  personalTasks: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "PersonalTask", // Reference to PersonalTask model
-    },
-  ],
+  status: {
+    type: Boolean,
+    required: true,
+  },
 });
 
 // Create the "User" model using the schema

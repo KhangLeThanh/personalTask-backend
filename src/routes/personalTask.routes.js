@@ -26,17 +26,6 @@ router.post("/", async (req, res) => {
 
     const savedTask = await personalTask.save();
 
-    // Ensure user has a personalTasks array (if it doesn't exist)
-    if (!user.personalTasks) {
-      user.personalTasks = [];
-    }
-
-    // Add the new task's ID to the user's personalTasks array
-    user.personalTasks.push(savedTask._id);
-
-    // Save the user document with the new task added
-    await user.save();
-
     // Respond with the created task data
     res.status(201).json({
       id: savedTask._id,
