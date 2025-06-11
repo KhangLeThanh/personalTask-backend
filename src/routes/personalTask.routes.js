@@ -5,11 +5,11 @@ const router = express.Router();
 
 // POST /api/tasks - Add a new task
 router.post("/", async (req, res) => {
-  const { title, content, status, assignedTo, userCreated } = req.body;
+  const { title, content, status, assignedTo, user } = req.body;
 
   try {
     // Validate required fields
-    if (!title || !content || !userCreated) {
+    if (!title || !content || !user) {
       return res
         .status(400)
         .json({ error: "All required fields must be filled" });
@@ -17,7 +17,7 @@ router.post("/", async (req, res) => {
 
     // Create a new PersonalTask document
     const personalTask = new PersonalTask({
-      userCreated,
+      user,
       title,
       content,
       status,
@@ -44,7 +44,7 @@ router.post("/", async (req, res) => {
       content: savedTask.content,
       status: savedTask.status,
       assignedTo: savedTask.assignedTo,
-      userCreated: savedTask.userCreated,
+      user: savedTask.user,
     });
   } catch (error) {
     // Log the error for debugging
@@ -57,16 +57,20 @@ router.post("/", async (req, res) => {
 
 // GET /api/tasks - Get Task details
 router.get("/", async (req, res) => {
-  const { status } = req.query;
+  const { status, assignedTo } = req.query;
+  const query = {};
 
   try {
     if (status) {
       query.status = status; // Add status filter if provided
     }
-
+    if (assignedTo) {
+      const ids = assignedTo.split(",");
+      query.assignedTo = { $in: ids }; // Add assignedTo filter if provided
+    }
     // Fetch tasks based on query
-    const tasks = await PersonalTask.find()
-      .populate("userCreated", "userName") // Only include userName from creator
+    const tasks = await PersonalTask.find(query)
+      .populate("user", "userName") // Only include userName from creator
       .populate("assignedTo", "userName"); // Only include userName from assignee
     // Return the user details along with the personal task
     res.status(200).json(tasks);
