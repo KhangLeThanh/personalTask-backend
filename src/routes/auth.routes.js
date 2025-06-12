@@ -11,12 +11,14 @@ router.post("/", async (req, res) => {
 
   const user = await User.findOne({ userName });
   if (!user) {
-    return res.status(400).json({ error: "Invalid username or password" });
+    return res.status(401).json({ error: "Invalid username or password" });
   }
-
+  if (!user.status) {
+    return res.status(403).json({ message: "Account is deactivated" });
+  }
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    return res.status(400).json({ error: "Invalid username or password" });
+    return res.status(401).json({ error: "Invalid username or password" });
   }
 
   const token = jwt.sign(
