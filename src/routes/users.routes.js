@@ -6,8 +6,17 @@ const router = express.Router();
 
 // GET /api/users - Get all users
 router.get("/", async (req, res) => {
+  const { status } = req.query;
+  const query = {};
   try {
-    const users = await User.find({});
+    if (status === "true" || !status) {
+      query.$or = [{ status: true }, { status: { $exists: false } }];
+    } else if (status === "false") {
+      query.status = false;
+    }
+
+    const users = await User.find(query);
+
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: "Error fetching users" });
@@ -71,7 +80,7 @@ router.patch("/:id", async (req, res) => {
       { new: true }
     );
     if (!updatedUser) {
-      return res.status(404).json({ error: "Task not found" });
+      return res.status(404).json({ error: "User not found" });
     }
     return res.status(200).json(updatedUser);
   } catch (error) {
