@@ -29,9 +29,9 @@ router.post("/", async (req, res) => {
 
   res.cookie("token", token, {
     httpOnly: true,
-    secure: false, // ✅ change to true in production (with HTTPS)
-    sameSite: "lax", // or 'strict'
-    maxAge: 10 * 60 * 60 * 1000, // 10 hours in milliseconds
+    secure: false,
+    sameSite: "lax",
+    maxAge: 10 * 60 * 60 * 1000,
   });
 
   res.status(200).json({ user: { id: user._id, userName: user.userName } });

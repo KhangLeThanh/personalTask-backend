@@ -34,6 +34,7 @@ app.use("/api/users", require("./src/routes/users.routes"));
 app.use("/api/profiles", require("./src/routes/profile.routes"));
 app.use("/api/tasks", require("./src/routes/personalTask.routes"));
 app.use("/api/login", require("./src/routes/auth.routes"));
+app.use("/api/logout", require("./src/routes/logout.routes"));
 
 // Start server
 const PORT = process.env.PORT || 3001;
